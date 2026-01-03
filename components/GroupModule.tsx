@@ -38,27 +38,37 @@ export const GroupModule: React.FC<GroupModuleProps> = ({ participants }) => {
   const downloadCSV = () => {
     if (groups.length === 0) return;
 
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // Add BOM for Excel Chinese support
-    csvContent += "Group ID,Name\n";
+    // Use Blob for better encoding support
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]); // UTF-8 BOM
+    let csvContent = "Group ID,Name\n";
 
     groups.forEach(group => {
       group.members.forEach(member => {
-        csvContent += `Group ${group.groupId},${member.name}\n`;
+        // Handle commas in names by wrapping in quotes
+        const safeName = member.name.includes(',') ? `"${member.name}"` : member.name;
+        csvContent += `Group ${group.groupId},${safeName}\n`;
       });
     });
 
-    const encodedUri = encodeURI(csvContent);
+    const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute("href", url);
     link.setAttribute("download", "grouped_teams.csv");
     document.body.appendChild(link);
     link.click();
+
+    // Clean up with a longer delay (5s) to ensure verify browser file write completion
     document.body.removeChild(link);
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 5000);
   };
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      
+
       {/* Controls */}
       <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-4">
@@ -73,9 +83,9 @@ export const GroupModule: React.FC<GroupModuleProps> = ({ participants }) => {
 
         <div className="flex items-center gap-4 bg-gray-50 p-2 rounded-lg border border-gray-200">
           <label className="text-sm font-medium text-gray-700 ml-2">每組人數:</label>
-          <input 
-            type="number" 
-            min="1" 
+          <input
+            type="number"
+            min="1"
             max={participants.length}
             value={groupSize}
             onChange={(e) => setGroupSize(Math.max(1, parseInt(e.target.value) || 1))}
@@ -101,7 +111,7 @@ export const GroupModule: React.FC<GroupModuleProps> = ({ participants }) => {
       {isGenerated && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {groups.map((group, idx) => (
-            <motion.div 
+            <motion.div
               key={group.groupId}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
