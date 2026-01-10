@@ -94,7 +94,13 @@ export const GroupModule: React.FC<GroupModuleProps> = ({ participants }) => {
         </div>
 
         <div className="flex gap-3">
-          <Button onClick={generateGroups} size="lg" className="shadow-indigo-200 shadow-md">
+          <Button
+            onClick={generateGroups}
+            size="lg"
+            className="shadow-indigo-200 shadow-md"
+            disabled={participants.length === 0}
+            title={participants.length === 0 ? "請先新增名單" : "開始進行分組"}
+          >
             <Shuffle className="w-4 h-4 mr-2" />
             開始分組
           </Button>
@@ -143,7 +149,14 @@ export const GroupModule: React.FC<GroupModuleProps> = ({ participants }) => {
       {!isGenerated && (
         <div className="text-center py-20 bg-white/50 rounded-xl border border-dashed border-gray-300">
           <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-500">準備好後，點擊「開始分組」</h3>
+          {participants.length === 0 ? (
+            <div>
+              <h3 className="text-lg font-medium text-gray-500 mb-2">尚未有名單資料</h3>
+              <p className="text-gray-400">請先至「名單管理」新增人員</p>
+            </div>
+          ) : (
+            <h3 className="text-lg font-medium text-gray-500">準備好後，點擊「開始分組」</h3>
+          )}
         </div>
       )}
 
