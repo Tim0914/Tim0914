@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: '0.0.0.0',
     },
+    base: '/luckyball/',
     plugins: [react()],
     test: {
       globals: true,
